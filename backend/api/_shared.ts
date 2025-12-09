@@ -61,17 +61,24 @@ export async function callChatLLM(params: {
     // gpt-5-mini (likely o1-mini based) only passes with temperature=1
     const finalTemperature = model === 'gpt-5-mini' ? 1 : temperature;
 
-    const completion = await client.chat.completions.create({
-      model,
-      temperature: finalTemperature,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-    });
-    const content = completion.choices[0]?.message?.content?.trim() || '';
-    const clean = content.replace(/<tool_call>[\s\S]*?<\/think>/g, '').trim();
-    return clean || (content ? `⚠️ Model only output reasoning (no final answer found):\n\n${content}` : '');
+    try {
+      console.log(`[OpenAI] Calling model: ${model}, temperature: ${finalTemperature}`);
+      const completion = await client.chat.completions.create({
+        model,
+        temperature: finalTemperature,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      });
+      const content = completion.choices[0]?.message?.content?.trim() || '';
+      const clean = content.replace(/<tool_call>[\s\S]*?<\/think>/g, '').trim();
+      return clean || (content ? `⚠️ Model only output reasoning (no final answer found):\n\n${content}` : '');
+    } catch (error: any) {
+      console.error(`[OpenAI] Error:`, error?.message || error);
+      console.error(`[OpenAI] Full error:`, JSON.stringify(error, null, 2));
+      throw new Error(`OpenAI error: ${error?.message || 'Unknown error'}`);
+    }
   }
 
   if (provider === 'groq') {
