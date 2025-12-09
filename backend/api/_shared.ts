@@ -58,7 +58,11 @@ export async function callChatLLM(params: {
 }) {
   const { provider, model, temperature, systemPrompt, userPrompt } = params;
   if (provider === 'openai') {
-    const client = new OpenAI({ apiKey: ensureApiKey(process.env.OPENAI_API_KEY, 'OPENAI_API_KEY') });
+    const client = new OpenAI({
+      apiKey: ensureApiKey(process.env.OPENAI_API_KEY, 'OPENAI_API_KEY'),
+      timeout: 60000,  // 60 seconds
+      maxRetries: 2,
+    });
 
     // gpt-5-mini (likely o1-mini based) only passes with temperature=1
     const finalTemperature = model === 'gpt-5-mini' ? 1 : temperature;
