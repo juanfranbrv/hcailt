@@ -1,0 +1,10 @@
+{
+  "name": "hcailt",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "powershell -Command \"& { netstat -ano | findstr ':3000' | ForEach-Object { $p = $_.Split() | Where-Object { $_ -match '^\\d+$' } | Select-Object -Last 1; if ($p) { taskkill /F /PID $p 2>$null } }; netstat -ano | findstr ':5173' | ForEach-Object { $p = $_.Split() | Where-Object { $_ -match '^\\d+$' } | Select-Object -Last 1; if ($p) { taskkill /F /PID $p 2>$null } }; Start-Job -ScriptBlock { cd backend; npm start } | Out-Null; Start-Sleep -Seconds 2; cd frontend; npm run dev }\"",
+    "dev:backend": "cd backend && npm start",
+    "dev:frontend": "cd frontend && npm run dev"
+  }
+}
