@@ -235,28 +235,42 @@ function App() {
           {/* Hero Section */}
           <section className="relative z-10 container mx-auto px-6 pt-16 pb-12">
             <NeuralNetwork />
-            <div className="animate-fade-in">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-5xl md:text-7xl font-display font-bold tracking-tight text-balance leading-tight">
-                  <span className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
-                    HCAILT Demo Overview: Multilingual Healthcare Assistance for Irish Holidaymakers in Spain
-                  </span>
-                </h2>
-                <Button onClick={cycleTheme} variant="outline" size="icon" className="rounded-full ml-4 flex-shrink-0">
-                  {themeName === 'light' && <Sun className="w-4 h-4" />}
-                  {themeName === 'dark' && <Moon className="w-4 h-4" />}
-                  {themeName === 'contrast' && <Contrast className="w-4 h-4" />}
-                </Button>
+
+            {/* Theme Toggle - Absolute Top Right */}
+            <div className="absolute top-6 right-6 z-20">
+              <Button onClick={cycleTheme} variant="ghost" size="icon" className="rounded-full hover:bg-muted/50 transition-colors">
+                {themeName === 'light' && <Sun className="w-5 h-5" />}
+                {themeName === 'dark' && <Moon className="w-5 h-5" />}
+                {themeName === 'contrast' && <Contrast className="w-5 h-5" />}
+              </Button>
+            </div>
+
+            <div className="animate-fade-in space-y-6">
+              <div className="grid lg:grid-cols-[1fr,500px] gap-8 items-start">
+                {/* Left: Title and Description */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-balance leading-tight">
+                      <span className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+                        HCAILT Demo Overview: Multilingual Healthcare Assistance for Irish Holidaymakers in Spain
+                      </span>
+                    </h2>
+                  </div>
+                  <p className="text-base text-muted-foreground leading-relaxed max-w-4xl">
+                    This demo showcases how AI-powered language technologies can support real-world communication needs in healthcare settings, using a Human-Centered AI for Language Technology (HCAILT) approach, based on the paper "Human-Centered AI Language Technology: An Empathetic Design Framework for Reliable, Safe and Trustworthy Multilingual Communication".
+                  </p>
+                </div>
+
+                {/* Right: Educational Intro (collapsed view only) */}
+                <div className="lg:sticky lg:top-6">
+                  <EducationalIntro />
+                </div>
               </div>
-              <p className="text-xl text-muted-foreground leading-relaxed">
-                This demo showcases how AI-powered language technologies can support real-world communication needs in healthcare settings, using a Human-Centered AI for Language Technology (HCAILT) approach, based on the paper "Human-Centered AI Language Technology: An Empathetic Design Framework for Reliable, Safe and Trustworthy Multilingual Communication".
-              </p>
             </div>
           </section>
 
           {/* Main Content */}
           <main className="relative z-10 container mx-auto px-6 pb-20">
-            <EducationalIntro />
             <div className="grid lg:grid-cols-[320px,1fr] gap-8">
               {/* Sidebar - Settings */}
               <aside className="space-y-6 animate-slide-in">
@@ -577,9 +591,13 @@ function App() {
                           </div>
                           <div className="min-h-[400px] max-h-[600px] overflow-y-auto rounded-b-md border border-input bg-purple-50/50 dark:bg-purple-950/20 px-3 py-3 text-sm">
                             <div className="prose prose-sm dark:prose-invert max-w-none">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {translation || '*Processing...*'}
-                              </ReactMarkdown>
+                              {isMedical === false ? (
+                                <p className="text-muted-foreground italic">Not processed — Non-medical text detected.</p>
+                              ) : (
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  {translation || '*Processing...*'}
+                                </ReactMarkdown>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -613,9 +631,13 @@ function App() {
                           </div>
                           <div className="min-h-[400px] max-h-[600px] overflow-y-auto rounded-b-md border border-input bg-emerald-50/50 dark:bg-emerald-950/20 px-3 py-3 text-sm">
                             <div className="prose prose-sm dark:prose-invert max-w-none">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {plain || '*Processing...*'}
-                              </ReactMarkdown>
+                              {isMedical === false ? (
+                                <p className="text-muted-foreground italic">Not processed — Non-medical text detected.</p>
+                              ) : (
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  {plain || '*Processing...*'}
+                                </ReactMarkdown>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -624,8 +646,8 @@ function App() {
                   </Card>
                 )}
 
-                {/* Reset Button - Only show when process is complete */}
-                {!loading && translation && plain && (
+                {/* Reset Button - Show when process is complete (medical with results) or when non-medical detected */}
+                {!loading && (isMedical === false || (translation && plain)) && (
                   <div className="mt-6 flex justify-center">
                     <Button
                       onClick={resetProcess}
