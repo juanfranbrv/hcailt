@@ -1,385 +1,261 @@
 # HCAILT - Healthcare AI Language Translation
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?logo=react)](https://react.dev/)
-[![Backend](https://img.shields.io/badge/Backend-Vercel%20Serverless-black?logo=vercel)](https://vercel.com)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwind-css)](https://tailwindcss.com)
+**Multilingual Healthcare Assistance for Irish**
 
-> **HCAILT** (Healthcare AI Language Translation) es una aplicación web para traducir y simplificar textos médicos del español al inglés utilizando modelos de lenguaje de última generación (LLMs).
-
-**Sitio en vivo:** [hcailt.awordz.com](https://hcailt.awordz.com)
+A web application that demonstrates AI-powered medical document translation with quality estimation. It processes Spanish medical documents and produces simplified English versions suitable for patients, while maintaining medical accuracy.
 
 ---
 
-## 📋 Índice
+## 🎯 Overview
 
-- [¿Qué es HCAILT?](#qué-es-hcailt)
-- [Características Principales](#características-principales)
-- [Cómo Funciona Técnicamente](#cómo-funciona-técnicamente)
-  - [Arquitectura](#arquitectura)
-  - [Flujo de Procesamiento](#flujo-de-procesamiento)
-  - [Stack Tecnológico](#stack-tecnológico)
-- [Instalación](#instalación)
-- [Deployment](#deployment)
-- [Estructura del Proyecto](#estructura-del-proyecto)
-- [Proveedores LLM](#proveedores-llm)
-- [Contribuir](#contribuir)
+This project implements a **4-step translation pipeline**:
+
+1. **Domain Check** - Verifies the input text is medical-related
+2. **Translation** - Translates Spanish medical text to technical English
+3. **Simplification** - Converts technical English to patient-friendly language
+4. **Quality Estimation (QE)** - Scores the simplified output (0-100%)
+
+Each step uses LLM-based processing with configurable providers and models.
 
 ---
 
-## ¿Qué es HCAILT?
+## 🏗️ Architecture
 
-HCAILT es una herramienta de investigación para facilitar la traducción automática de contenido médico en español a inglés, seguido de una simplificación del lenguaje técnico para hacerlo accesible al público general.
+```
+hcailt/
+├── frontend/         # React + Vite (UI)
+│   ├── src/
+│   │   ├── App.tsx           # Main application
+│   │   ├── store/            # Zustand state management
+│   │   ├── services/api.ts   # API client
+│   │   └── components/       # UI components
+│   └── package.json
+│
+├── backend/          # Vercel Serverless Functions
+│   ├── api/
+│   │   ├── _shared.ts        # Shared utilities & LLM calls
+│   │   ├── domain-check.ts   # Medical domain verification
+│   │   ├── translate.ts      # Translation endpoint
+│   │   ├── plain.ts          # Simplification endpoint
+│   │   └── qe.ts             # Quality estimation endpoint
+│   ├── .env                  # API keys (not committed)
+│   └── package.json
+│
+└── README.md
+```
 
-### Problema que resuelve
+### Deployment
 
-Los documentos médicos contienen terminología compleja que dificulta su comprensión para pacientes y personas sin formación médica. HCAILT aborda este desafío mediante un pipeline de 4 fases:
-
-1. **Domain Check**: Identifica si el texto es de naturaleza médica
-2. **Translation**: Traduce del español al inglés preservando precisión médica
-3. **Plain Language**: Convierte lenguaje técnico en lenguaje sencillo
-4. **Quality Estimation**: Evalúa la calidad de traducción y simplificación (0-100%)
+- **Frontend**: Vercel project `hcailt` (Root: `frontend`)
+- **Backend**: Vercel project `hcailt-backend` (Root: `backend`)
+- **Repository**: `https://github.com/juanfranbrv/hcailt_react`
 
 ---
 
-## Características Principales
+## 🤖 Providers & Models
 
-### ✨ Funcionalidades Core
-
-- **Multi-proveedor LLM**: Soporte para OpenAI, Google Gemini, Groq y Fireworks AI
-- **Pipeline completo**: Domain-check → Translation → Plain Language → Quality Estimation
-- **Carga de archivos**: TXT, PDF y DOCX (hasta 20MB)
-- **Control granular**: Temperatura configurable independiente para cada fase
-- **Textos de muestra**: Ejemplos médicos y no médicos precargados
-
-### 🎨 Diseño "Clinical Futurism"
-
-- **UI moderna**: Shadcn/UI + Tailwind CSS con diseño distintivo
-- **Tipografía premium**: Sora (display) + Figtree (body)
-- **Animaciones fluidas**: Efectos de entrada, transiciones suaves, visualización de pipeline
-- **Elementos decorativos**: Orbes flotantes, redes neuronales SVG, patrones geométricos
-- **Temas**: Modo claro, oscuro y alto contraste
-- **Responsive**: Optimizado para desktop, tablet y mobile
+| Provider | Available Models | Default |
+|----------|------------------|---------|
+| **OpenAI** | `gpt-5.1`, `gpt-5-mini` | `gpt-5.1` |
+| **Google** | `gemini-2.5-flash`, `gemini-flash-lite-latest` | `gemini-2.5-flash` |
+| **Groq** | `openai/gpt-oss-120b` | — |
+| **Fireworks** | `deepseek-v3p1-terminus` | — |
 
 ---
 
-## Cómo Funciona Técnicamente
+## 🛠️ Local Development
 
-### Arquitectura
+### Prerequisites
 
-HCAILT utiliza una **arquitectura cliente-servidor** con frontend en React y backend en funciones serverless:
+- Node.js 18+
+- npm
+- Vercel CLI (`npm install -g vercel`)
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                   FRONTEND (React)                      │
-│  • UI: Shadcn/UI + Tailwind CSS                        │
-│  • State: Zustand                                       │
-│  • Build: Vite + TypeScript                            │
-│  • Deploy: Hostinger (static hosting)                  │
-└──────────────────┬──────────────────────────────────────┘
-                   │ HTTPS / Axios
-                   ▼
-┌─────────────────────────────────────────────────────────┐
-│          BACKEND API (Vercel Serverless)                │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  /api/domain-check  →  Detecta dominio médico   │  │
-│  │  /api/translate     →  Español → Inglés         │  │
-│  │  /api/plain         →  Técnico → Simple         │  │
-│  │  /api/qe            →  Quality Score (0-100%)   │  │
-│  └──────────────────┬───────────────────────────────┘  │
-│                     │                                   │
-│              _shared.ts                                 │
-│         (LLM Orchestration Layer)                       │
-└──────────────────┬──────────────────────────────────────┘
-                   │
-     ┌─────────────┼─────────────┬────────────┐
-     │             │             │            │
-     ▼             ▼             ▼            ▼
-┌─────────┐  ┌──────────┐  ┌────────┐  ┌──────────┐
-│ OpenAI  │  │  Google  │  │  Groq  │  │Fireworks │
-│   API   │  │  Gemini  │  │   API  │  │   AI     │
-└─────────┘  └──────────┘  └────────┘  └──────────┘
-```
+### Setup
 
-### Componentes Principales
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/juanfranbrv/hcailt_react.git
+   cd hcailt_react
+   ```
 
-#### 1. Frontend (React + Vite + TypeScript)
+2. **Configure environment variables**
+   
+   Create `backend/.env`:
+   ```env
+   OPENAI_API_KEY=your-openai-key
+   GOOGLE_API_KEY=your-google-key
+   GROQ_API_KEY=your-groq-key
+   FIREWORKS_API_KEY=your-fireworks-key
+   ALLOWED_ORIGIN=http://localhost:5173
+   ```
 
-**Responsabilidades:**
-- Renderizar la interfaz de usuario
-- Gestionar estado global (Zustand)
-- Parsear archivos (TXT/PDF/DOCX)
-- Comunicarse con el backend vía HTTP
-- Aplicar temas y animaciones
+3. **Install dependencies**
+   ```bash
+   cd frontend && npm install
+   cd ../backend && npm install
+   ```
 
-**Tecnologías clave:**
-- **React 18**: Framework UI reactivo
-- **TypeScript**: Tipado estático
-- **Vite**: Build ultra-rápido con HMR
-- **Shadcn/UI**: Componentes accesibles basados en Radix UI
-- **Tailwind CSS**: Utility-first CSS con configuración custom
-- **Axios**: Cliente HTTP
-- **Zustand**: State management ligero
-- **PDF.js**: Parsing de PDFs
-- **Mammoth.js**: Parsing de DOCX
-
-#### 2. Backend (Vercel Serverless Functions)
-
-**Responsabilidades:**
-- Orquestar llamadas a proveedores LLM
-- Gestionar API keys de forma segura
-- Validar requests con Zod schemas
-- Manejar CORS
-- Normalizar respuestas de diferentes LLMs
-
-**Estructura:**
-
-```typescript
-// _shared.ts - Lógica común
-export async function callChatLLM(params: {
-  provider: 'openai' | 'google' | 'groq' | 'fireworks';
-  model: string;
-  temperature: number;
-  systemPrompt: string;
-  userPrompt: string;
-}) {
-  // Enruta a la API correcta según el proveedor
-  // Maneja autenticación
-  // Normaliza respuesta
-}
-
-// domain-check.ts
-export default async function handler(req, res) {
-  const { text, provider, model, temperature } = req.body;
-  const prompt = "Analiza si este texto es del dominio médico...";
-  const response = await callChatLLM({...});
-  res.json({ isMedical: parseBoolean(response) });
-}
-
-// Similares: translate.ts, plain.ts, qe.ts
-```
-
-### Flujo de Procesamiento
-
-**Secuencia completa de una traducción:**
-
-```
-Usuario sube texto "Diagnóstico: hipertensión arterial..."
-    ↓
-┌─────────────────────────────────────────────┐
-│ 1. DOMAIN CHECK                             │
-│    Frontend → POST /api/domain-check        │
-│    Backend → LLM: "¿Es médico?"             │
-│    LLM → "Sí" (isMedical: true)             │
-│    ✓ Continúa al paso 2                     │
-└─────────────────────────────────────────────┘
-    ↓
-┌─────────────────────────────────────────────┐
-│ 2. TRANSLATION                              │
-│    Frontend → POST /api/translate           │
-│    Backend → LLM: "Traduce ESP→ENG"         │
-│    LLM → "Diagnosis: arterial hypertension"│
-│    ✓ Continúa al paso 3                     │
-└─────────────────────────────────────────────┘
-    ↓
-┌─────────────────────────────────────────────┐
-│ 3. PLAIN LANGUAGE                           │
-│    Frontend → POST /api/plain               │
-│    Backend → LLM: "Simplifica lenguaje"     │
-│    LLM → "Diagnosis: high blood pressure"  │
-│    ✓ Continúa al paso 4                     │
-└─────────────────────────────────────────────┘
-    ↓
-┌─────────────────────────────────────────────┐
-│ 4. QUALITY ESTIMATION                       │
-│    Frontend → POST /api/qe                  │
-│    Backend → LLM: "Evalúa calidad"          │
-│    LLM → Score: 92%                        │
-│    ✓ Muestra resultados                     │
-└─────────────────────────────────────────────┘
-    ↓
-Frontend muestra:
-  • Traducción técnica
-  • Traducción simple
-  • Score de calidad
-  • Indicador de dominio médico
-```
-
-### Stack Tecnológico
-
-| Capa | Tecnologías |
-|------|-------------|
-| **Frontend** | React 18, TypeScript, Vite, Shadcn/UI, Tailwind CSS, Zustand |
-| **Backend** | Node.js, TypeScript, Vercel Functions, Zod |
-| **LLM SDKs** | OpenAI SDK, Google GenAI, Groq SDK, Fetch API (Fireworks) |
-| **File Parsing** | PDF.js, Mammoth.js |
-| **HTTP Client** | Axios |
-| **Deployment** | Vercel (backend), Hostinger (frontend), FTP Deploy |
-| **Dev Tools** | ESLint, Git, Vercel CLI |
-
----
-
-## Instalación
-
-### Prerrequisitos
-
-- Node.js ≥ 18
-- npm ≥ 9
-- API keys de al menos un proveedor LLM
-
-### 1. Clonar el repositorio
-
-```bash
-git clone https://github.com/tu-usuario/hcailt.git
-cd hcailt
-```
-
-### 2. Configurar Backend
-
-```bash
-cd backend
-npm install
-
-# Crear .env con tus API keys
-cat > .env << EOF
-GOOGLE_API_KEY=tu_clave_google
-GROQ_API_KEY=tu_clave_groq
-FIREWORKS_API_KEY=tu_clave_fireworks
-OPENAI_API_KEY=tu_clave_openai
-ALLOWED_ORIGIN=http://localhost:5173,https://tu-dominio.com
-EOF
-```
-
-### 3. Configurar Frontend
-
-```bash
-cd ../frontend
-npm install
-
-# Crear .env
-echo "VITE_API_BASE_URL=http://localhost:3000" > .env
-```
-
-### 4. Ejecutar en Desarrollo
+### Running Locally
 
 **Terminal 1 - Backend:**
 ```bash
 cd backend
 vercel dev
 ```
+Backend runs on `http://localhost:3000`
 
 **Terminal 2 - Frontend:**
 ```bash
 cd frontend
 npm run dev
 ```
+Frontend runs on `http://localhost:5173`
 
-Abre http://localhost:5173
+Open `http://localhost:5173` in your browser.
 
 ---
 
-## Deployment
+## 🚀 Deployment
 
-### Backend → Vercel
+### Pushing Changes to GitHub
 
 ```bash
-cd backend
-vercel --prod --yes
+git add .
+git commit -m "your commit message"
+git push
 ```
 
-Configura variables de entorno en Vercel Dashboard (Settings → Environment Variables).
+### Manual Deploy to Vercel
 
-### Frontend → Hostinger
-
-**Automático:**
+**Frontend:**
 ```bash
 cd frontend
-
-# Configurar .env.ftp con credenciales
-npm run deploy:hostinger
+vercel --prod
 ```
 
-**Manual:**
+**Backend:**
 ```bash
-npm run build
-# Subir contenido de dist/ vía FTP
+vercel link --project hcailt-backend --yes
+vercel --prod
 ```
 
-Ver [DEPLOYMENT.md](./DEPLOYMENT.md) para más detalles.
+Note: The backend requires linking to the correct Vercel project first.
 
 ---
 
-## Estructura del Proyecto
+## 📡 API Reference
 
-```
-hcailt/                      # Monorepo
-├── frontend/                # React App
-│   ├── src/
-│   │   ├── components/     # UI components
-│   │   │   ├── ui/        # Shadcn/UI
-│   │   │   └── DecorativeElements.tsx
-│   │   ├── services/      # API client
-│   │   ├── store/         # Zustand state
-│   │   ├── utils/         # File parsers
-│   │   ├── App.tsx
-│   │   └── styles.css
-│   ├── public/
-│   ├── deploy-hostinger.js
-│   └── package.json
-│
-├── backend/                # Vercel Serverless API
-│   ├── api/
-│   │   ├── _shared.ts     # LLM orchestration
-│   │   ├── domain-check.ts
-│   │   ├── translate.ts
-│   │   ├── plain.ts
-│   │   └── qe.ts
-│   └── package.json
-│
-├── legacy-streamlit/       # Original Streamlit version
-│
-├── DEPLOYMENT.md
-├── DOCS.md
-└── README.md
+All endpoints accept `POST` requests with JSON body.
+
+### Common Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `provider` | string | `openai`, `google`, `groq`, or `fireworks` |
+| `model` | string | Model identifier |
+| `temperature` | number | 0.0 - 1.0 (creativity level) |
+
+### Endpoints
+
+#### `POST /api/domain-check`
+Verifies if input text is medical-related.
+
+```json
+{
+  "provider": "openai",
+  "model": "gpt-5.1",
+  "temperature": 0.3,
+  "text": "El paciente presenta dolor abdominal..."
+}
 ```
 
+#### `POST /api/translate`
+Translates Spanish medical text to English.
+
+```json
+{
+  "provider": "openai",
+  "model": "gpt-5.1",
+  "temperature": 0.3,
+  "text": "El paciente presenta dolor abdominal..."
+}
+```
+
+#### `POST /api/plain`
+Simplifies technical English to patient-friendly language.
+
+```json
+{
+  "provider": "openai",
+  "model": "gpt-5.1",
+  "temperature": 0.7,
+  "text": "The patient presents with acute abdominal pain..."
+}
+```
+
+#### `POST /api/qe`
+Evaluates translation quality (0-100%).
+
+```json
+{
+  "provider": "openai",
+  "model": "gpt-5.1",
+  "temperature": 0.2,
+  "originalText": "Spanish original...",
+  "translatedText": "Technical English...",
+  "simplifiedText": "Simplified English..."
+}
+```
+
 ---
 
-## Proveedores LLM
+## 🔬 Quality Estimation Criteria
 
-| Proveedor | Modelos | Obtener API Key |
-|-----------|---------|-----------------|
-| **OpenAI** | gpt-4.1-mini, gpt-4.1 | [platform.openai.com](https://platform.openai.com/api-keys) |
-| **Google** | gemini-2.5-pro, gemini-2.5-flash | [ai.google.dev](https://ai.google.dev/) |
-| **Groq** | openai/gpt-oss-120b, qwen/qwen3-32b | [console.groq.com](https://console.groq.com) |
-| **Fireworks** | kimi-k2-thinking, deepseek-v3p1-terminus | [fireworks.ai](https://fireworks.ai/) |
+The QE system evaluates translations using three weighted criteria:
 
----
-
-## Contribuir
-
-Contribuciones bienvenidas:
-
-1. Fork el proyecto
-2. Crea tu rama (`git checkout -b feature/MiFeature`)
-3. Commit (`git commit -m 'Agrega MiFeature'`)
-4. Push (`git push origin feature/MiFeature`)
-5. Abre un Pull Request
+| Criterion | Weight | Description |
+|-----------|--------|-------------|
+| **Accuracy** | 50% | Medical facts, diagnoses, dosages preserved correctly |
+| **Clarity** | 30% | Simple, understandable language for patients |
+| **Completeness** | 20% | All essential information present |
 
 ---
 
-## Licencia
+## 📋 Temperature Settings
 
-MIT License - Ver [LICENSE](./LICENSE) para detalles.
+Default values for each pipeline step:
+
+| Step | Temperature | Reasoning |
+|------|-------------|-----------|
+| Domain Check | 0.3 | Low creativity, factual |
+| Translation | 0.3 | Accurate, deterministic |
+| Simplification | 0.7 | More creative adaptation |
+| Quality Estimation | 0.2 | Consistent scoring |
 
 ---
 
-## Referencias
+## 🔐 Environment Variables
 
-**Artículo científico:** [HCAILT: A Machine Translation Approach for the Clinical Domain](https://tu-paper-url.com)
+### Backend (Vercel)
 
-**Demo:** [hcailt.awordz.com](https://hcailt.awordz.com)
+| Variable | Description |
+|----------|-------------|
+| `OPENAI_API_KEY` | OpenAI API key |
+| `GOOGLE_API_KEY` | Google AI API key |
+| `GROQ_API_KEY` | Groq API key |
+| `FIREWORKS_API_KEY` | Fireworks API key |
+| `ALLOWED_ORIGIN` | CORS allowed origins |
 
 ---
 
-🚀 **Desarrollado con Claude Code**
+## 📄 License
+
+This project is for academic/research purposes as part of the HCAILT initiative.
+
+---
+
+## 👥 Contributors
+
+- Juan Francisco Bravo
+
