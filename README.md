@@ -48,7 +48,7 @@ hcailt/
 
 - **Frontend**: Vercel project `hcailt` (Root: `frontend`)
 - **Backend**: Vercel project `hcailt-backend` (Root: `backend`)
-- **Repository**: `https://github.com/juanfranbrv/hcailt_react`
+- **Repository**: `https://github.com/juanfranbrv/hcailt`
 
 ---
 
